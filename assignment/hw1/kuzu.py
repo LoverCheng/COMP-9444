@@ -21,20 +21,34 @@ class NetLin(nn.Module):
         # flatten image, [10, H, W, C] => [B, H * W * C]
         input = input.view(input.size(0), -1)
         # linear function
-        hidden = self.in_to_h1(input)
+        out_sum = self.in_to_h1(input)
         # log softmax
         # why do we need to add dim=1
-        output = F.log_softmax(hidden, dim=1)
+        output = F.log_softmax(out_sum, dim=1)
         return output
 
 
 class NetFull(nn.Module):
     # two fully connected tanh layers followed by log softmax
+    #  one hidden layer, plus the output layer
     def __init__(self):
         super(NetFull, self).__init__()
+        # L1(H * W * C, hidden_size)
+        # L2(hidden_size, 10)
+        self.in_to_h1 = nn.Linear(28 * 28, 120)
+        self.in_to_h2 = nn.Linear(120, 10)
 
-    def forward(self, input):
-        pass
+    def forward(self, input_value):
+        # flatten image, [10, H, W, C] => [B, H * W * C]
+        input_value = input_value.view(input_value.size(0), -1)
+        # linear function
+        hid_sum = self.in_to_h1(input_value)
+        hidden = torch.tanh(hid_sum)
+        # log softmax
+        # why do we need to add dim=1
+        out_sum = self.in_to_h2(hidden)
+        output = F.log_softmax(out_sum, dim=1)
+        return output
 
 
 class NetConv(nn.Module):
