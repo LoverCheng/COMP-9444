@@ -91,6 +91,7 @@ def main():
         net = NetFull().to(device)
     else:
         net = NetConv().to(device)
+        print(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
     if list(net.parameters()):
         # use SGD optimizer

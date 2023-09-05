@@ -115,3 +115,4 @@ class lang_reber:
         else:
             print('error: %1.4f' %torch.mean((prob_out - target)
                                             *(prob_out - target)))
+        return symbol

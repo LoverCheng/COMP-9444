@@ -72,7 +72,8 @@ if args.hid == 2:
     plt.plot(net.H0.data[0],net.H0.data[1],'bx') 
 elif args.hid == 3:    
     fig = plt.figure()
-    ax = Axes3D(fig)
+    # ax = Axes3D(fig)
+    ax = fig.add_subplot(projection='3d')
     ax.plot(net.H0.data[0],net.H0.data[1],net.H0.data[2],'bx') 
     
 with torch.no_grad():

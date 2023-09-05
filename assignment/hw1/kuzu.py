@@ -34,7 +34,9 @@ class NetFull(nn.Module):
     def __init__(self):
         super(NetFull, self).__init__()
         # L1(H * W * C, hidden_size)
-        # L2(hidden_size, 10)
+        # L2(hidden_size, 10)   try from 10 to 100
+        # 10 classes(Given)
+        # independent parameters: (28 * 28 + 1) *120 + (120 + 1 ) * 10
         self.in_to_h1 = nn.Linear(28 * 28, 120)
         self.in_to_h2 = nn.Linear(120, 10)
 
@@ -56,7 +58,27 @@ class NetConv(nn.Module):
     # all using relu, followed by log_softmax
     def __init__(self):
         super(NetConv, self).__init__()
-        # INSERT CODE HERE
+        # in_channel in this case, it is 1 because it is a gray scale image
+        # out_channels corresponding the number of filter, such as 8, 16, 32
+        # kernel_size means: num * num kernel, such as 4, 5, 6
+        # padding, arbitrary, such as 1, 2
+        # stride, arbitrary, but usually 1
+        # 28 * 28 gray scale image
+        self.conv1 = nn.Conv2d(in_channels= 1, out_channels=8,  kernel_size= 5, padding= 2, stride= 1)
+        self.conv2 = nn.Conv2d(in_channels= 8, out_channels=18, kernel_size= 5, padding= 2, stride= 1)
+        # max pooling layer
+        self.MaxPool = nn.MaxPool2d(kernel_size=2, stride=2)
+        # fully connected layer
+        self.fc1 = nn.Linear(3528, 200)
+        self.fc2 = nn.Linear(200, 10)
 
     def forward(self, x):
-        return 0  # CHANGE CODE HERE
+        out = F.relu(self.conv1(x))
+        out = F.relu(self.conv2(out))
+
+        out = self.MaxPool(out)
+        out = out.view(out.size(0), -1)
+        out = F.relu(self.fc1(out))
+        out = self.fc2(out)
+        out = F.log_softmax(out, dim=1)
+        return out

@@ -9,6 +9,8 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
+from matplotlib import pyplot as plt
+
 from seq_models import SRN_model, LSTM_model
 from reber import lang_reber
 from anbn import lang_anbn
@@ -76,6 +78,11 @@ loss_function = F.nll_loss
 
 np.set_printoptions(suppress=True,precision=2,sign=' ')
 
+C_t_mean_final = []
+F_t_mean_final = []
+O_t_mean_final = []
+I_t_mean_final = []
+
 for epoch in range((args.epoch*1000)+1):
     net.zero_grad()
 
@@ -83,7 +90,8 @@ for epoch in range((args.epoch*1000)+1):
     label  = seq[1:]
 
     net.init_hidden()
-    hidden, output = net(input)
+    # hidden, output = net(input)
+    hidden, output, C_t, F_t, O_t, I_t = net(input)
     log_prob = F.log_softmax(output, dim=2)
     prob_out = torch.exp(log_prob)
     loss = F.nll_loss(log_prob.squeeze(), label.squeeze())
@@ -100,16 +108,52 @@ for epoch in range((args.epoch*1000)+1):
             label = seq[1:]
             
             net.init_hidden()
-            hidden, output = net(input)
+            # hidden, output = net(input)
+            hidden, output, C_t, F_t, O_t, I_t = net(input)
+            C_t_np = [tensor.numpy() for tensor in C_t]
+            F_t_np = [tensor.numpy() for tensor in F_t]
+            O_t_np = [tensor.numpy() for tensor in O_t]
+            I_t_np = [tensor.numpy() for tensor in I_t]
+            # Calculate means
+            C_t_mean = np.mean([np.mean(arr) for arr in C_t_np])
+            F_t_mean = np.mean([np.mean(arr) for arr in F_t_np])
+            O_t_mean = np.mean([np.mean(arr) for arr in O_t_np])
+            I_t_mean = np.mean([np.mean(arr) for arr in I_t_np])
+
+
             log_prob = F.log_softmax(output, dim=2)
             prob_out = torch.exp(log_prob)
             
             lang.print_outputs(epoch, seq, state, hidden, target, output)
+            print("C_t:")
+            print(C_t)
+            print("F_t")
+            print(F_t)
+            print("O_t")
+            print(O_t)
+            print("I_t")
+            print(I_t)
             sys.stdout.flush()
 
+            C_t_mean_final.append(C_t_mean)
+            F_t_mean_final.append(C_t_mean)
+            O_t_mean_final.append(C_t_mean)
+            I_t_mean_final.append(C_t_mean)
             net.train()
 
         if epoch % 10000 == 0:
             path = args.out_path+'/'
             torch.save(net.state_dict(),path+'%s_%s%d_%d.pth'
                        %(args.lang,args.model,args.hid,epoch/1000))
+
+t= np.arange(len(C_t_mean_final))
+plt.figure(figsize=(12, 8))
+plt.plot(t, C_t_mean, label='C_t')
+plt.plot(t, F_t_mean, label='F_t')
+plt.plot(t, O_t_mean, label='O_t')
+plt.plot(t, I_t_mean, label='I_t')
+plt.xlabel('Timestep')
+plt.ylabel('Mean Value')
+plt.title('Mean Gate and Cell State Values Over Time')
+plt.legend()
+plt.show()
